@@ -1,0 +1,192 @@
+Option Explicit
+'TubeBook'
+
+Const numColumns As Integer = 9
+Const curID As Integer = 1
+Const curTR As Integer = 2
+Const curStarD As Integer = 3
+Const curEndD As Integer = 4
+Const curActED As Integer = 5
+Const curCycl As Integer = 6
+Const curCham As Integer = 7
+Const curAlloy As Integer = 8
+Const curCyclT As Integer = 9
+Const dummyRow As Integer = 1
+
+Const numCoupons As Integer = 6
+
+Private workbookName As String
+Private worksheetName As String
+Private startRowI As Integer
+Private tubeBookArr(numColumns) As String
+
+
+Private Sub Class_Initialize()
+    'no code needed here yet
+End Sub
+
+Public Function InitializeTubeBook(initialWkBkNm As String, initialWkShNm As String, initialStartRowI As Integer) As TubeBook
+    
+    workbookName = initialWkBkNm
+    worksheetName = initialWkShNm
+    startRowI = initialStartRowI
+End Function
+
+
+Private Sub Class_Terminate()
+    Erase tubeBookArr
+End Sub
+
+'Private Sub SetWorkbookName(inputWkBkNm As String)
+'    workbookName = inputWkBkNm
+'End Sub
+
+'Private Sub SetWorksheetName(inputWkShNm As String)
+'    worksheetName = inputWkShNm
+'End Sub
+
+'Private Sub SetStartRow(inputStartRowI As String)
+'    startRowI = inputStartRowI
+'End Sub
+Public Function GetWorkbookName() As String
+    GetWorkbookName = workbookName
+End Function
+
+Public Function GetWorksheetName() As String
+    GetWorksheetName = worksheetName
+End Function
+
+Public Function GetStartRowI() As Integer
+    GetStartRowI = startRowI
+End Function
+
+Public Sub SetID(columnName As String)
+    tubeBookArr(curID) = columnName
+End Sub
+
+Public Sub SetTR(columnName As String)
+    tubeBookArr(curTR) = columnName
+End Sub
+
+Public Sub SetStarD(columnName As String)
+    tubeBookArr(curStarD) = columnName
+End Sub
+
+Public Sub SetEndD(columnName As String)
+    tubeBookArr(curEndD) = columnName
+End Sub
+
+Public Sub SetActED(columnName As String)
+    tubeBookArr(curActED) = columnName
+End Sub
+
+Public Sub SetCycl(columnName As String)
+    tubeBookArr(curCycl) = columnName
+End Sub
+
+Public Sub SetCham(columnName As String)
+    tubeBookArr(curCham) = columnName
+End Sub
+
+Public Sub SetAlloy(columnName As String)
+    tubeBookArr(curAlloy) = columnName
+End Sub
+
+Public Sub SetCyclT(columnName As String)
+    tubeBookArr(curCyclT) = columnName
+End Sub
+
+Function GetColumns() As Integer
+    GetColumns = numColumns
+End Function
+
+Function GetID() As String
+    GetID = tubeBookArr(curID)
+End Function
+
+Function GetTR() As String
+    GetTR = tubeBookArr(curTR)
+End Function
+
+Function GetStarD() As String
+    GetStarD = tubeBookArr(curStarD)
+End Function
+
+Function GetEndD() As String
+    GetEndD = tubeBookArr(curEndD)
+End Function
+
+Function GetActED() As String
+    GetActED = tubeBookArr(curActED)
+End Function
+
+Function GetCycl() As String
+    GetCycl = tubeBookArr(curCycl)
+End Function
+
+Function GetCham() As String
+    GetCham = tubeBookArr(curCham)
+End Function
+
+Function GetAlloy() As String
+    GetAlloy = tubeBookArr(curAlloy)
+End Function
+
+Function GetCyclT() As String
+    GetCyclT = tubeBookArr(curCyclT)
+End Function
+
+Function ConvertI(ByVal curString As String) As Integer
+    Dim dummyRow As Integer
+    dummyRow = 1
+    'Dim curBook As Workbook
+    'Dim curSheet As Worksheet
+    'Set curBook = Workbooks(workbookName)
+    'Set curSheet = Worksheets(worksheetName)
+    curString = curString & CStr(dummyRow)
+    ConvertI = Range(curString).Column
+End Function
+
+
+Function GetIDInt() As Integer
+    GetIDInt = ConvertI(tubeBookArr(curID))
+End Function
+
+Function GetTRInt() As Integer
+    GetTRInt = ConvertI(tubeBookArr(curTR))
+End Function
+
+Function GetStarDInt() As Integer
+    GetStarDInt = ConvertI(tubeBookArr(curStarD))
+End Function
+
+Function GetEndDInt() As Integer
+    GetEndDInt = ConvertI(tubeBookArr(curEndD))
+End Function
+
+Function GetActEDInt() As Integer
+    'GetActEDInt = ConvertI(GetActED)
+    GetActEDInt = ConvertI(tubeBookArr(curActED))
+End Function
+
+Function GetCyclInt() As Integer
+    GetCyclInt = ConvertI(tubeBookArr(curCycl))
+End Function
+
+Function GetChamInt() As Integer
+    GetChamInt = ConvertI(tubeBookArr(curCham))
+End Function
+
+Function GetAlloyInt() As Integer
+    GetAlloyInt = ConvertI(tubeBookArr(curAlloy))
+End Function
+
+Function GetCyclTInt() As Integer
+    GetCyclTInt = ConvertI(tubeBookArr(curCyclT))
+End Function
+
+Function GetNumCoupons() As Integer
+    GetNumCoupons = numCoupons
+End Function
+
+
