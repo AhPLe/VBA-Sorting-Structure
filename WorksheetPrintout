@@ -1,0 +1,38 @@
+Option Explicit
+
+'class module WorksheetPrintout'
+    Public Header As String
+    Public theTubes As Collection
+    Private tempTube As TubeInfo
+'comment for readability of above line'
+
+Public Property Set AddTube(newTube As TubeInfo)
+    Set tempTube = newTube
+    theTubes.Add tempTube
+End Property
+
+
+Function changeHeader(newHead As String)
+    Header = newHead
+End Function
+
+Function addToHeader(moreHead As String)
+    Header = Header + moreHead
+End Function
+
+Public Function tubeCount() As Integer
+    tubeCount = theTubes.Count
+End Function
+
+Private Sub Class_Initialize()
+    Header = ""
+    Set theTubes = New Collection
+End Sub
+
+Private Sub Class_Terminate()
+    Set theTubes = Nothing
+End Sub
+
+
+
+
