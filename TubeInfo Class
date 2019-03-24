@@ -1,0 +1,83 @@
+Option Explicit
+
+'class module TubeInfo'
+'defined to store each necessary value in the tube
+'options for improvement: only store values that have been set and throw errors otherwise
+    'implementation would improve storage use and possibly speed
+    Public ID As String
+    Public TR As String
+    Public TubeChamber As String
+    Public EndDate As Date
+    Public ActEndDate As Date
+    Public Tube_CycleC As Collection
+    Public Info_NamesC As Collection
+    Private Const numCoupons As Integer = 6
+    Private tubeCycleArr(numCoupons - 1) As Integer
+    Private tubeColorArr(numCoupons - 1) As Long
+    Private tubeNamesArr() As String
+    'ideally the above variables should exist as a collection to cycle through in case some things
+    'can be used or read for visibility/variability of each formula
+'comment for readability of above line due to excel formatting
+    
+    
+
+
+Private Sub Class_Initialize()
+    ID = "Default - the task ID"
+    TR = "Default - the Task Request"
+    EndDate = 0
+    ActEndDate = 0
+    TubeChamber = "Default - the AES Chamber (Tube Chamber)"
+    Set Tube_CycleC = New Collection
+    Set Info_NamesC = New Collection
+    'tempArr() As Integer
+    'tubeCycleArr = tempArr
+    'the below code just defines a default value for the whole array
+    Dim i As Integer
+    For i = LBound(tubeCycleArr) To UBound(tubeCycleArr)
+        tubeCycleArr(i) = 0
+        Next i
+    For i = LBound(tubeColorArr) To UBound(tubeColorArr)
+        tubeColorArr(i) = 0
+        Next i
+    
+End Sub
+
+Private Sub Class_Terminate()
+    Set Tube_CycleC = Nothing
+    Set Info_NamesC = Nothing
+    Erase tubeCycleArr
+    Erase tubeColorArr
+    Erase tubeNamesArr
+End Sub
+
+Public Function GetNumCoupons() As Integer
+    GetNumCoupons = numCoupons
+End Function
+
+Public Sub SetCouponCycle(newCyclArr As Variant)
+    Dim i As Integer
+    
+    For i = 0 To numCoupons - 1
+        tubeCycleArr(i) = newCyclArr(i)
+    Next i
+End Sub
+
+Public Sub SetCouponColor(newColorArr As Variant)
+    Dim i As Integer
+    
+    For i = 0 To numCoupons - 1
+        tubeColorArr(i) = newColorArr(i)
+    Next i
+End Sub
+
+
+Public Function GetCouponCycle(i As Integer) As Integer
+    GetCouponCycle = tubeCycleArr(i)
+    
+End Function
+
+Public Function GetCouponColor(i As Integer) As Long
+    GetCouponColor = tubeColorArr(i)
+    
+End Function
