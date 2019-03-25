@@ -1,0 +1,463 @@
+Option Explicit
+
+Private Const maxTest As Integer = 10000
+Private Const rowBeyondTest As Integer = 3
+Private defBook As New DefaultBooks
+Public Const printColumns As Integer = 5
+
+Private Const clearColPrintPlacement As String = "J2"
+
+
+Sub Check_Excel_Document_Formulas()
+    
+    '"Workbook Breaks Test" is the worksheet you should test for breaks
+ 
+    'just setting a limit in case of an infinite loop
+    'having the program run for 30 minutes for a hangup seems a bit much
+
+
+    
+
+    Dim cellPrintPlacement As Range
+    Set cellPrintPlacement = Range("A1, A1")
+    Dim cellPrintPlacement_Column As Integer
+    Dim cellPrintPlacement_Row As Integer
+    cellPrintPlacement_Column = cellPrintPlacement.Column
+    cellPrintPlacement_Row = cellPrintPlacement.Row
+
+    
+    
+    Dim oneErrPrintout As CheckErrorPrintout
+    Set oneErrPrintout = Check_Formulas_TubeBook(defBook.Get_OneBook)
+
+    Dim testing_WkBk As Workbook
+    Dim testing_WkSht As Worksheet
+    
+
+    Dim startRange As Range
+    Set startRange = cellPrintPlacement
+    
+    If Check_Open_Workbook(defBook.Get_TestBook().GetWorkbookName()) Then
+        
+        Set testing_WkBk = Workbooks(defBook.Get_TestBook().GetWorkbookName())
+        Set testing_WkSht = testing_WkBk.Worksheets(defBook.Get_TestBook().GetWorksheetName())
+        
+        If TestText.IsTextRange(testing_WkSht.Range(clearColPrintPlacement).Value) Then
+            testing_WkSht.Range(testing_WkSht.Range(clearColPrintPlacement).Value).Clear
+        Else
+            MsgBox ("Cell " + clearColPrintPlacement + " did not have a range, result may not look clean")
+            
+        End If
+        
+        'columnsToClear = printColumns
+        
+        'calling this from each header loop, it will make formatting more straightforward
+
+        Set cellPrintPlacement = oneErrPrintout.errorPrint(testing_WkSht, cellPrintPlacement)
+    Else
+        MsgBox (defBook.Get_TestBook().GetWorkbookName() + " is not open, Unable to Print." + Chr(10) + Chr(13) + _
+            "Please rename this file: " + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorkbookName() + _
+            Chr(10) + Chr(13) + "With spreadsheet: " + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorksheetName())
+        'note: this error checking does not check if the spreadsheet is open
+        'Since this is a default spreadsheet name, I didn't put in that error
+    End If
+    
+    Dim completeRange As Range
+    Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1), cellPrintPlacement.Cells(0, oneErrPrintout.GetPrintColumns))
+    'the returned range is one past where the final print is, so the selection needs to take one step back
+    completeRange.Select
+    
+    testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
+    
+    'main function functionality only'
+    'test for four or more non-green cells'
+    'test for white cells with a function'
+    'secondary test is inclusion of an end date'
+    'if (start_row)'
+
+End Sub
+
+
+Function Get_Color(curCell As Range) As Long
+    'for this function I wanted to make it clear which color the cell was taken from
+    'the function may be changed from the first cell to the last cell, but it should be one of the two
+    Set curCell = Range(curCell.Cells(1, 1), curCell.Cells(1, 1))
+    Get_Color = curCell.Interior.Color
+    
+End Function
+
+Function CheckGreen(curColor As Long) As Boolean
+    'not included in the function as there are two greens currently used
+    'and the color may need to be changed again
+    Dim r As Long
+    Dim g As Long
+    Dim b As Long
+    Dim fromHex As Long
+    fromHex = 256
+    r = curColor Mod fromHex
+    g = curColor \ fromHex Mod fromHex
+    b = curColor \ (fromHex * fromHex) Mod fromHex
+    Dim greenStd As Integer
+    greenStd = 175
+    Dim whiteStd As Integer
+    whiteStd = 255
+    
+    If (g > greenStd) Then
+        If r >= whiteStd Or b >= whiteStd Then
+            CheckGreen = False
+        Else
+            CheckGreen = True
+        End If
+    Else
+        CheckGreen = False
+    End If
+    
+End Function
+
+Function CheckNonGreen(curColor As Long) As Boolean
+    Dim r As Long
+    Dim g As Long
+    Dim b As Long
+    Dim fromHex As Long
+    fromHex = 256
+    r = curColor Mod fromHex
+    g = curColor \ fromHex Mod fromHex
+    b = curColor \ (fromHex * fromHex) Mod fromHex
+    Dim greenStd As Integer
+    greenStd = 175
+    Dim whiteStd As Integer
+    whiteStd = 255
+    
+    'if it's above the greenStd for green, it could be white.
+    'Either way the cell won't pass the test for non-green or white
+    
+    If (g > greenStd) And (b >= whiteStd Or Not (r >= whiteStd)) Then
+        CheckNonGreen = False
+    Else
+        CheckNonGreen = True
+    End If
+    
+End Function
+
+Function CheckWhite(curColor As Long) As Boolean
+    Dim r As Long
+    Dim g As Long
+    Dim b As Long
+    Dim fromHex As Long
+    fromHex = 256
+    r = curColor Mod fromHex
+    g = curColor \ fromHex Mod fromHex
+    b = curColor \ (fromHex * fromHex) Mod fromHex
+    Dim whiteStd As Integer
+    whiteStd = 255
+    
+    
+    If (r >= whiteStd And g >= whiteStd And b >= whiteStd) Then
+        CheckWhite = True
+    Else
+        CheckWhite = False
+    End If
+    
+End Function
+
+Function Check_Open_Workbook(wkBkStr As String) As Boolean
+
+    'Taken and modified from https://www.extendoffice.com/documents/excel/2630-excel-find-check-open-workbook.html#a1'
+    Dim wkBk As Workbook
+    On Error Resume Next
+    Set wkBk = Workbooks(wkBkStr)
+    Dim toReturnBoolean As Boolean
+
+    If wkBk Is Nothing Then
+        Check_Open_Workbook = False
+        Exit Function
+    Else
+        Check_Open_Workbook = True
+        Exit Function
+    End If
+    
+    MsgBox "Random value returned, Check_Open_Workbook should not have gotten here"
+    Check_Open_Workbook = True
+    'stay positive?'
+    Exit Function
+End Function
+
+Function Check_Formulas_TubeBook(curBook As TubeBook, Optional strictCheck As Boolean = True) As CheckErrorPrintout
+    'check the document errors, set a strict with default being strict
+    'strict is currently not necessary
+    
+    Set Check_Formulas_TubeBook = New CheckErrorPrintout
+    
+    'this function should test six cells in a row, return true if any of the cells contain
+    'a nongreen color while still containing a function
+    
+    Dim curWorkbook As Workbook
+    Dim curSheet As Worksheet
+    Set Check_Formulas_TubeBook = New CheckErrorPrintout
+    
+    Check_Formulas_TubeBook.addToHeader ("the workbook " + curBook.GetWorkbookName + "is not open")
+    
+    If Check_Open_Workbook(curBook.GetWorkbookName) Then
+        Check_Formulas_TubeBook.changeHeader ("checking formulas in " + curBook.GetWorkbookName)
+        Set curWorkbook = Workbooks(curBook.GetWorkbookName)
+        Set curSheet = curWorkbook.Worksheets(curBook.GetWorksheetName)
+        
+        
+        Dim startRow As Integer
+        startRow = curBook.GetStartRowI()
+    
+        'does this need to be set?'
+        Dim totalNonGreen As Integer
+        Dim totalWhite As Integer
+        Dim totalGreen As Integer
+        Dim totalFormulas As Integer
+        Dim numCouponsToOffTest As Integer
+        numCouponsToOffTest = 4
+        
+        Dim newErr As String
+        Dim newCellErr As String
+        newErr = ""
+        newCellErr = ""
+        
+        'calculate total here
+        Dim i, j, k As Long
+        Dim stopTesting As Boolean
+        Dim stopTestingInt As Integer
+        stopTestingInt = 20
+        'to make sure this formula doesn't run continuously for too long
+        Dim tempTube As TubeInfo
+        Set tempTube = New TubeInfo
+        Dim tempRange As Range
+        Dim lowDate As Date
+        lowDate = 360
+        
+        Dim rowHasED As Boolean
+        Dim cellHasFormula As Boolean
+        Dim curColor As Long
+        Dim curColorIndex As Integer
+        
+        Dim countMsg As Integer
+        countMsg = 0
+        
+        Dim tempTubeError As Collection
+        Dim tempTubeErrorCell As Collection
+        Set tempTubeError = New Collection
+        Set tempTubeErrorCell = New Collection
+        
+        'these are used for adding possible errors that could be fine
+        'currently if there is an end date, two whites, and only one nongreen with an end date it now doesn't post there is an error
+        'it allows to test each cell without stopping until the end of the row
+        
+        
+        For i = startRow To maxTest + startRow
+            'this should run the maxTest number of tests
+            'mixing and matching cells and range, you should be able to use interior.color on a range
+            For k = 0 To (rowBeyondTest - 1)
+                stopTesting = True
+        
+                If (Not IsEmpty(curSheet.Cells(i + k, curBook.GetIDInt).Value)) Then
+                    stopTesting = False
+                    Exit For
+                End If
+            Next k
+            If (stopTesting) Or (Check_Formulas_TubeBook.errorCount > stopTestingInt) Then
+                Exit For
+            End If
+            
+            totalNonGreen = 0
+            totalWhite = 0
+            totalGreen = 0
+            totalFormulas = 0
+            
+            rowHasED = False
+            'in case something messes up in the formula, this can be the default
+            rowHasED = (IsDate(curSheet.Cells(i, curBook.GetActEDInt)) And (curSheet.Cells(i, curBook.GetActEDInt)) > lowDate)
+            'test each nongreen cell does not have a formula
+            'possibly test for 4 non greens and two whites
+                'the other option would be to make sure at least two cells were white or there were no greens
+                'if there are greens, the ActED should equal the ED
+            
+            'each nongreen cell should not have a formula, there should be no white cells, and the cells should either be green or nongreen
+            'this should be done in a separate function
+            
+            
+            
+            For j = 0 To curBook.GetNumCoupons - 1
+                cellHasFormula = True
+                curColor = -1
+                'setting equation defaults
+                cellHasFormula = curSheet.Cells(i, curBook.GetCyclInt + j).HasFormula
+                If cellHasFormula Then
+                    totalFormulas = totalFormulas + 1
+                End If
+                
+                Set tempRange = curSheet.Range(curSheet.Cells(i, curBook.GetCyclInt + j).Address)
+                curColor = curSheet.Range(curSheet.Cells(i, curBook.GetCyclInt + j).Address).Interior.Color
+                'curColor = tempRange.Interior.Color
+                If CheckWhite(curColor) Then
+                    totalWhite = totalWhite + 1
+                    If cellHasFormula And Not rowHasED Then
+                        newErr = "white cell with a formula and no end date at:"
+                        newCellErr = tempRange.Address
+                        Set tempTube = FoundTube(curBook, curSheet, i)
+                        Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                        Set tempTube = New TubeInfo
+                        newErr = ""
+                        newCellErr = ""
+                    End If
+                ElseIf CheckNonGreen(curColor) Then
+                    totalNonGreen = totalNonGreen + 1
+                    If cellHasFormula Then
+                        newErr = "non-green cell with formula at:"
+                        newCellErr = tempRange.Address
+                        Set tempTube = FoundTube(curBook, curSheet, i)
+                        tempTubeError.Add tempTube
+                        tempTubeErrorCell.Add newCellErr
+                        'Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                        Set tempTube = New TubeInfo
+                        newErr = ""
+                        newCellErr = ""
+                    End If
+                ElseIf CheckGreen(curColor) Then
+                    totalGreen = totalGreen + 1
+                    If Not cellHasFormula Then
+                        newErr = "Green Cell without a formula at:"
+                        newCellErr = tempRange.Address
+                        Set tempTube = FoundTube(curBook, curSheet, i)
+                        Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                        Set tempTube = New TubeInfo
+                        newErr = ""
+                        newCellErr = ""
+                    End If
+                Else
+                    newErr = "unable to parse cell (program error) at:"
+                    newCellErr = tempRange.Address
+                    tempTube = FoundTube(curBook, curSheet, i)
+                    Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                    Set tempTube = New TubeInfo
+                    newErr = ""
+                    newCellErr = ""
+                End If
+                
+                'if it has an actual end date, throw error at green if the actual end date is less than the estimated end date
+                                                
+            Next j
+            'If totalNonGreen > 3 And Not rowHasED And totalFormulas < tempTube.GetNumCoupons Then
+            If tempTubeError.Count > 0 Then
+                'there are a couple different things to test here, but I wanted it to default pass if this wasn't true
+                If tempTubeError.Count > 1 Then
+                    For k = tempTubeError.Count To 1 Step -1
+                        'allows you to ignore setting a new variable for tempTubeError.count or resetting it each time
+                        newErr = "non-green cell with formula at:"
+                        Check__Formulas_TubeBook.AddError tempTubeError(1), newErr, tempTubeErrorCell(1)
+                        tempTubeError.Remove (1)
+                        tempTubeErrorCell.Remove (1)
+                        
+                    Next k
+                    newErr = ""
+                ElseIf totalWhite = tempTube.GetNumCoupons - numCouponsToOffTest And totalNonGreen > numCouponsToOffTest - 1 Then
+                    'case if tube is off test, with an end date: the total white and total nongreen match 4 breaks
+                        'in this case there can be one nongreen formula
+                    tempTubeError.Remove (1)
+                    tempTubeErrorCell.Remove (1)
+                Else
+                    newErr = "non-green cell with formula at:"
+                    Check_Formulas_TubeBook.AddError tempTubeError(1), newErr, tempTubeErrorCell(1)
+                    tempTubeError.Remove (1)
+                    tempTubeErrorCell.Remove (1)
+                    newErr = ""
+                End If
+                
+            End If
+            If (totalNonGreen > numCouponsToOffTest - 1 And Not rowHasED) And (Not (totalFormulas <= 0)) Then
+                newErr = "no End Date with more than 3 nongreen cells at row:"
+                newCellErr = CStr(i)
+                Set tempTube = FoundTube(curBook, curSheet, i)
+                Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                Set tempTube = New TubeInfo
+                newErr = ""
+                newCellErr = ""
+            End If
+            If (totalNonGreen > numCouponsToOffTest - 1) And (totalNonGreen + totalWhite < tempTube.GetNumCoupons) Then
+                newErr = "possibly few white cells at row:"
+                newCellErr = CStr(i)
+                Set tempTube = FoundTube(curBook, curSheet, i)
+                Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                Set tempTube = New TubeInfo
+                newErr = ""
+                newCellErr = ""
+            End If
+            If totalGreen > 0 And rowHasED And curSheet.Cells(i, curBook.GetEndDInt) > curSheet.Cells(i, curBook.GetActEDInt) Then
+                newErr = "Green Cell with questionable end date on row:"
+                newCellErr = CStr(i)
+                Set tempTube = FoundTube(curBook, curSheet, i)
+                Check_Formulas_TubeBook.AddError tempTube, newErr, newCellErr
+                Set tempTube = New TubeInfo
+                newErr = ""
+                newCellErr = ""
+            End If
+        
+        Next i
+        
+        Set tempTubeError = Nothing
+        Set tempTubeErrorCell = Nothing
+        
+    End If
+End Function
+
+Function Get_Cell_Info(taskRequest As Boolean, taskID As Boolean, taskCycles As Boolean, _
+    taskStartDate As Boolean, taskEndDate As Boolean, taskChamber As Boolean) As TubeInfo
+    
+    Dim taskRSt As String
+    taskR = "no Task Request"
+    Dim taskIDSt As String
+    taskID = "no Task ID"
+    Dim taskCyclesIn As Integer
+    taskCyclesIn = -9
+    Dim taskSDDa As Date
+    taskEDDa = -657434
+    Dim taskEDDa As Date
+    taskEDDa = -657434
+    Dim taskChSt As String
+    taskChSt = "no Task Chamber"
+    'the above variables are to list the error functions in case a value is not applied
+    
+    If (taskRequest) Then
+        
+    End If
+    If (taskID) Then
+        
+    End If
+    
+End Function
+
+Function FoundTube(curBook As TubeBook, curWkSh As Worksheet, ByVal curRow As Integer) As TubeInfo
+    'ideally, both this and CheckErrorPrintout.errorPrint should contain co-dependencied functions and in the CheckError class
+    Set FoundTube = New TubeInfo
+    Dim dummyRow As Integer
+    dummyRow = 1
+    
+    'dates don't need .value, strings do
+    
+    FoundTube.ID = curWkSh.Cells(curRow, Range(curBook.GetID & CStr(dummyRow)).Column).Value
+    FoundTube.TR = curWkSh.Cells(curRow, Range(curBook.GetTR & CStr(dummyRow)).Column).Value
+    FoundTube.EndDate = curWkSh.Cells(curRow, Range(curBook.GetEndD & CStr(dummyRow)).Column)
+    'FoundTube.TubeChamber = curWkSh.Cells(curRow, Range(curBook.GetCham & CStr(dummyRow)).Column).Value
+    'Dim i As Integer
+    'error may appear here
+    'Dim tubeColors(5) As Long
+    
+    'For i = 0 To FoundTube.GetNumCoupons - 1
+    '    tubeColors(i) = 0
+    '    tubeColors(i) = curWkSh.Range(curWkSh.Cells(curRow, curBook.GetCyclInt + i).Address).Interior.Color
+    'Next i
+    
+    'FoundTube.SetCouponColor (tubeColors)
+    
+End Function
+
+'so you could make a sheet array or collection for the variables for each sheet
+'an array would be fairly good as you can add things as a developer
+'an array can be used for the tube collection too, it's a set number of coupons
+
+
