@@ -1,0 +1,46 @@
+Option Explicit
+
+Public Const endCol As Integer = 5
+'the two ways to do this, hard coding and checking each time with each function
+'hard coding means I don't need to make an instance of all possible function to check how many columns need to be changed
+'otherwise where the function is needs to be checked each time.
+
+Sub ClearCells(curSheet As Worksheet, Optional ByVal endRange As Range)
+    Dim i As Integer
+    If IsMissing(numRows) Then
+        For i = 1 To endCol
+            curSheet.Columns(i).Clear
+            Next i
+    Else
+        'I had already implemented clearcells, so I included this. But it is a bit of a waste of space
+        curSheet.Range(endRange.Address).Clear
+    End If
+End Sub
+
+Sub ClearCellBox(curSheet As Worksheet, ByVal startPos As Range, numRows As Integer)
+    'clear and format are different subs to differentiate when a column is needed as input
+    Dim numColumns As Integer
+    numColumns = endCol
+    Dim outerBox As Integer
+    outerBox = 1
+    Set startPos = curSheet.Range(startPos.Cells(1, 1).Address, startPos.Cells(numRows + outerBox, numColumns + outerBox).Address)
+    startPos.Clear
+    
+End Sub
+
+Sub FormatCellBox(curSheet As Worksheet, ByVal startPos As Range, numRows As Integer, numColumns As Integer)
+    'clear and format are different subs to differentiate when a column is needed as input
+    If numRows > 0 And numColumns > 0 Then
+    
+        Set startPos = curSheet.Range(startPos.Cells(1, 1), startPos.Cells(numRows, numColumns))
+        With startPos.Borders(xlInsideHorizontal)
+            .LineStyle = xlContinuous
+            .Weight = xlThin
+        End With
+        With startPos.Borders(xlInsideVertical)
+            .LineStyle = xlContinuous
+            .Weight = xlThin
+        End With
+        startPos.BorderAround xlContinuous, xlMedium
+    End If
+End Sub
