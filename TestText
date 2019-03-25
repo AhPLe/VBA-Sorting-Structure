@@ -1,0 +1,26 @@
+'TestText Module
+Option Explicit
+
+Private Const testPattern1 As String = "$[A-Z]$[1-9]:$[A-Z]$[1-9]"
+Private Const testPattern2 As String = "$[A-Z]$[1-9][0-9]:$[A-Z]$[1-9]"
+Private Const testPattern3 As String = "$[A-Z]$[1-9]:$[A-Z]$[1-9][0-9]"
+Private Const testPattern4 As String = "$[A-Z]$[1-9][0-9]:$[A-Z]$[1-9][0-9]"
+
+
+Public Function IsTextRange(ByVal testString As String) As Boolean
+    'I didn't know how to use a case statement with like.
+    
+    IsTextRange = False
+    If Not (IsEmpty(testString) Or IsNull(testString)) Then
+        If testString Like testPattern1 Then
+            IsTextRange = True
+        ElseIf testString Like testPattern2 Then
+            IsTextRange = True
+        ElseIf testString Like testPattern3 Then
+            IsTextRange = True
+        ElseIf testString Like testPattern4 Then
+            IsTextRange = True
+        End If
+    End If
+    
+End Function
