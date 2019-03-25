@@ -1,0 +1,356 @@
+'Check when samples go off test
+
+'future: modify what's being tested so off test and 4 breaks are after the date check -
+'this is for more error checking
+Private Const max_Testing As Long = 10000
+Private Const week As Integer = 5
+Private Const starting_Day As Integer = 1
+Private defBook As New DefaultBooks
+Private Const printColumns As Integer = 4
+Private Const clearColPrintPlacement As String = "J2"
+
+    'day will start on Monday'
+'to change the spreadsheet to a month
+    'change the worksheetprintout to a collection of worksheetprintouts, possibly change the name to weeklyPrintout
+    'change the function to accept dates
+    'add function to supply dates until finished
+    'printout with a loop the collection of worksheetprintouts
+    
+Option Explicit
+
+Sub Finished_Sample_Check()
+    'Dim defBook As DefaultBooks
+    'defBook = New DefaultBooks
+    
+    Dim cellPrintPlacement As Range
+    Set cellPrintPlacement = Range("A1, A1")
+    Dim cellPrintPlacement_Column As Integer
+    Dim cellPrintPlacement_Row As Integer
+    cellPrintPlacement_Column = cellPrintPlacement.Column
+    cellPrintPlacement_Row = cellPrintPlacement.Row
+
+    
+    
+    
+    ' What does final_row need to be?'
+    Dim continue_Testing As Boolean
+    continue_Testing = True
+    Dim oneColl As New Collection
+    Dim timeColl As New Collection
+    
+    Set timeColl = CheckTimeButton()
+    
+    Dim i As Integer
+    For i = 1 To timeColl.Count
+        
+    
+        Dim one_Wksht_Print As New WorksheetPrintout
+        Set one_Wksht_Print = Check_Dates_From_TubeBook(defBook.Get_OneBook(), timeColl(i))
+        oneColl.Add one_Wksht_Print
+        
+    Next i
+        
+        
+    Dim testing_WkBk As Workbook
+    Dim testing_WkSht As Worksheet
+    Dim maxCount As Integer
+    maxCount = 0
+    maxCount = oneColl.Count
+    
+    
+    Dim startRange As Range
+    Set startRange = cellPrintPlacement
+    
+    If (Check_Open_Workbook(defBook.Get_TestBook().GetWorkbookName())) Then
+        
+        Set testing_WkBk = Workbooks(defBook.Get_TestBook().GetWorkbookName())
+        Set testing_WkSht = testing_WkBk.Worksheets(defBook.Get_TestBook().GetWorksheetName())
+        
+        If TestText.IsTextRange(testing_WkSht.Range(clearColPrintPlacement).Value) Then
+            testing_WkSht.Range(testing_WkSht.Range(clearColPrintPlacement).Value).Clear
+        Else
+            MsgBox ("Cell " + clearColPrintPlacement + " did not have a range, result may not look clean")
+            
+        End If
+            
+        
+        For i = 1 To maxCount
+            
+            If (oneColl.Count >= i) Then
+                Set cellPrintPlacement = WorksheetPrintout_Print(testing_WkSht, cellPrintPlacement, oneColl(i))
+            End If
+        Next i
+    Else
+        MsgBox (defBook.Get_TestBook().GetWorkbookName() + " is not open, unable to print results." + Chr(10) + Chr(13) + _
+            "Please rename workbook to: " + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorkbookName() + Chr(10) + Chr(13) + _
+            "with worksheet:" + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorksheetName())
+    End If
+    
+    Dim completeRange As Range
+    Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1).Address, cellPrintPlacement.Cells(0, printColumns).Address)
+    'the returned range is one past where the final print is, so the selection needs to take one step back
+    completeRange.Select
+    
+    testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
+    
+    Set oneColl = Nothing
+    Set timeColl = Nothing
+    
+End Sub
+
+Sub Clear_Front_Columns(curWksht As Worksheet)
+    Dim endCol As Integer
+    endCol = 4
+    Dim i As Integer
+    For i = 1 To endCol
+        curWksht.Columns(i).ClearContents
+        Next i
+End Sub
+
+
+Function Check_Dates_From_TubeBook(curTubeBook As TubeBook, numWeekOffset As Integer) As WorksheetPrintout
+    'modified function for using the worksheet printout instead of a string'
+    'This function is untested, but should serve as a good starting point if trying to clean up code'
+    Set Check_Dates_From_TubeBook = New WorksheetPrintout
+    
+    Dim workbookName As String
+    Dim worksheetName As String
+    Dim current_Spreadsheet_Row_Start As Integer
+    workbookName = curTubeBook.GetWorkbookName()
+    worksheetName = curTubeBook.GetWorksheetName()
+    current_Spreadsheet_Row_Start = curTubeBook.GetStartRowI()
+    
+    If (Not (Check_Open_Workbook(workbookName))) Then
+        Check_Dates_From_TubeBook.changeHeader ("The Workbook " + workbookName + " is not open")
+    Else
+        
+        Dim current_Date_Begins As Date
+        Dim todays_Date As Date
+        todays_Date = Date
+
+        Dim day_Offset As Integer
+        day_Offset = Weekday(todays_Date, vbMonday)
+        
+        Dim weekOffset As Integer
+        weekOffset = numWeekOffset * 7
+        current_Date_Begins = todays_Date - day_Offset + starting_Day + weekOffset
+
+        Dim current_WkBk As Workbook
+        Dim current_WkSht As Worksheet
+
+        Set current_WkBk = Workbooks(workbookName)
+        Set current_WkSht = current_WkBk.Worksheets(worksheetName)
+
+        Check_Dates_From_TubeBook.changeHeader (workbookName + " Dates: " + Chr(13) + Chr(10) + "Dates Covered: " + _
+            Format(current_Date_Begins, "mm-dd-yy") + " to " + Format((current_Date_Begins + week - 1), "mm-dd-yy"))
+        
+        Dim column_To_Int_Str As String
+        Dim column_To_Int_Str_Row_Dummy As Integer
+        column_To_Int_Str_Row_Dummy = 10
+        
+        Dim current_Spreadsheet_Work_Request_Int As Integer
+        Dim current_Spreadsheet_ID_Int As Integer
+        Dim current_Spreadsheet_Est_Finish_Int As Integer
+        Dim current_Spreadsheet_Act_Finish_Int As Integer
+        
+        column_To_Int_Str = curTubeBook.GetTR() + CStr(column_To_Int_Str_Row_Dummy)
+        current_Spreadsheet_Work_Request_Int = Range(column_To_Int_Str, column_To_Int_Str).Column
+        
+        column_To_Int_Str = curTubeBook.GetID() + CStr(column_To_Int_Str_Row_Dummy)
+        current_Spreadsheet_ID_Int = Range(column_To_Int_Str, column_To_Int_Str).Column
+        
+        column_To_Int_Str = curTubeBook.GetEndD() + CStr(column_To_Int_Str_Row_Dummy)
+        current_Spreadsheet_Est_Finish_Int = Range(column_To_Int_Str, column_To_Int_Str).Column
+        
+        column_To_Int_Str = curTubeBook.GetActED() + CStr(column_To_Int_Str_Row_Dummy)
+        current_Spreadsheet_Act_Finish_Int = Range(column_To_Int_Str, column_To_Int_Str).Column
+        
+        Dim continue_Testing As Boolean
+        Dim row_Beyond_Test As Integer
+        Dim tempTube As TubeInfo
+        
+        
+        row_Beyond_Test = 3
+        
+        continue_Testing = True
+        
+        Dim i As Long
+        Dim j As Integer
+        Dim k As Integer
+        
+        i = 0
+        j = 0
+        k = 0
+        
+        
+        Do While (continue_Testing And i < max_Testing)
+            'Test to continue Testing'
+            For k = 0 To (row_Beyond_Test - 1)
+                continue_Testing = False
+        
+                If (Not IsEmpty(current_WkSht.Cells(current_Spreadsheet_Row_Start + i + k, current_Spreadsheet_ID_Int).Value)) Then
+                    continue_Testing = True
+                    Exit For
+                End If
+                Next k
+            If (Not IsEmpty(current_WkSht.Cells(current_Spreadsheet_Row_Start + i, current_Spreadsheet_ID_Int).Value)) Then
+                If Not (current_WkSht.Cells(current_Spreadsheet_Row_Start + i, current_Spreadsheet_Act_Finish_Int) > 0) Then
+                    For j = 0 To week - 1
+                        If (current_Date_Begins + j) = current_WkSht.Cells(current_Spreadsheet_Row_Start + i, current_Spreadsheet_Est_Finish_Int) Then
+                        
+                            Set tempTube = FoundTube(curTubeBook, current_WkSht, current_Spreadsheet_Row_Start + i)
+                            Set Check_Dates_From_TubeBook.AddTube = tempTube
+                        End If
+                    Next j
+                End If
+            End If
+            i = i + 1
+        Loop
+
+    End If
+
+
+End Function
+
+Function FoundTube(curBook As TubeBook, curWkSh As Worksheet, curRow As Integer) As TubeInfo
+    'ideally, both this and WorksheetPrintout_Print should contain co-dependencied functions and in the WorksheetPrintout class
+    Set FoundTube = New TubeInfo
+    Dim dummyRow As Integer
+    dummyRow = 1
+    
+    'dates don't need .value, strings do
+    
+    FoundTube.ID = curWkSh.Cells(curRow, Range(curBook.GetID & CStr(dummyRow)).Column).Value
+    FoundTube.TR = curWkSh.Cells(curRow, Range(curBook.GetTR & CStr(dummyRow)).Column).Value
+    FoundTube.EndDate = curWkSh.Cells(curRow, Range(curBook.GetEndD & CStr(dummyRow)).Column)
+    'FoundTube.ActEndDate = curWkSh.Cells(curRow, Range(curBook.GetActED & CStr(dummyRow)).Column)
+    FoundTube.TubeChamber = curWkSh.Cells(curRow, Range(curBook.GetCham & CStr(dummyRow)).Column).Value
+    
+End Function
+
+Function WorksheetPrintout_Print(curWksht As Worksheet, startRange As Range, curWorksheetPrintout As WorksheetPrintout) As Range
+    'the checking formulas function was better implemented in the WorksheetPrintout class
+    'this was done for errors
+    'ideally, both this and foundtube should contain co-dependencied functions and in the WorksheetPrintout class
+    'the current iteration works and is complete, so this was not done
+    
+    Dim worksheetPrintoutColl As Collection
+    Set worksheetPrintoutColl = curWorksheetPrintout.theTubes
+    
+    Dim msgDelivered As Boolean
+    msgDelivered = False
+    
+    
+    Dim startRow As Integer
+    Dim startCol As Integer
+    startRow = startRange.Row
+    startCol = startRange.Column
+    
+    Dim endRow As Integer
+    Dim i As Integer
+    Dim j As Integer
+    
+    Dim worksheetPrintoutHeaderRows As Integer
+    worksheetPrintoutHeaderRows = 1
+    Dim numColumns As Integer
+    numColumns = 4
+    
+    Set WorksheetPrintout_Print = Range(Cells(startRow, startCol).Address())
+    
+    Call ClearCells.ClearCellBox(curWksht, WorksheetPrintout_Print, worksheetPrintoutHeaderRows)
+    Call ClearCells.FormatCellBox(curWksht, WorksheetPrintout_Print, worksheetPrintoutHeaderRows, numColumns)
+    
+    curWksht.Cells(startRow, startCol).Value = curWorksheetPrintout.Header
+    startRow = startRow + worksheetPrintoutHeaderRows
+    Set WorksheetPrintout_Print = Range(Cells(startRow, startCol).Address())
+    
+    Call ClearCells.ClearCellBox(curWksht, WorksheetPrintout_Print, worksheetPrintoutColl.Count)
+    Call ClearCells.FormatCellBox(curWksht, WorksheetPrintout_Print, worksheetPrintoutColl.Count, numColumns)
+    
+    For i = 1 To worksheetPrintoutColl.Count
+        j = 0
+        curWksht.Cells(startRow + i - 1, startCol + j).Value = worksheetPrintoutColl(i).TR
+        j = j + 1
+        curWksht.Cells(startRow + i - 1, startCol + j).Value = worksheetPrintoutColl(i).ID
+        j = j + 1
+        curWksht.Cells(startRow + i - 1, startCol + j).Value = worksheetPrintoutColl(i).EndDate
+        j = j + 1
+        'curWksht.Cells(startRow + i - 1, startCol + j).Value = worksheetPrintoutColl(i).ActEndDate
+        'j = j + 1
+        curWksht.Cells(startRow + i - 1, startCol + j).Value = worksheetPrintoutColl(i).TubeChamber
+        'IF MODIFIED, SUBTRACTED, OR ADDED TO PLEASE LOOK AT ClearCells Variable and numColumns var here. It is hardcoded as 6 columns currently
+        endRow = i - 1
+        'should go from i = 0 to tubeErrors.count - 1, but the other option of 1 to tubeErrors.Count also works
+        If j >= numColumns And Not msgDelivered Then
+            MsgBox ("The formatting will be poor, please modify numColumns and/or endCol in ClearCells")
+            msgDelivered = True
+        End If
+    Next
+    If worksheetPrintoutColl.Count > 0 Then
+        Set WorksheetPrintout_Print = Range(Cells(startRow + endRow + 1, startCol).Address())
+    End If
+    
+    Set worksheetPrintoutColl = Nothing
+        
+End Function
+
+Function Check_Open_Workbook(wkBkStr As String) As Boolean
+
+    'Taken and modified from https://www.extendoffice.com/documents/excel/2630-excel-find-check-open-workbook.html#a1'
+    Dim wkBk As Workbook
+    On Error Resume Next
+    Set wkBk = Workbooks(wkBkStr)
+    Dim toReturnBoolean As Boolean
+
+    If wkBk Is Nothing Then
+        Check_Open_Workbook = False
+        Exit Function
+    Else
+        Check_Open_Workbook = True
+        Exit Function
+    End If
+    
+    MsgBox "Random value returned - Check_Open_Workbook"
+    Check_Open_Workbook = True
+    'stay positive? the code shouldn't get here'
+    
+    Exit Function
+End Function
+
+Function CheckTimeButton() As Collection
+    Set CheckTimeButton = New Collection
+    Dim monthMult As Integer
+    monthMult = 4
+    Dim i As Integer
+    
+    Select Case 1
+        Case ActiveSheet.OptionButtons("thrBef").Value
+            CheckTimeButton.Add (-3)
+        Case ActiveSheet.OptionButtons("twoBef").Value
+            CheckTimeButton.Add (-2)
+        Case ActiveSheet.OptionButtons("oneBef").Value
+            CheckTimeButton.Add (-1)
+        Case ActiveSheet.OptionButtons("CurWk").Value 'ActiveSheet.OptionButtons().Value = 1
+            CheckTimeButton.Add (0)
+        Case ActiveSheet.OptionButtons("oneAft").Value
+            CheckTimeButton.Add (1)
+        Case ActiveSheet.OptionButtons("twoAft").Value
+            CheckTimeButton.Add (2)
+        Case ActiveSheet.OptionButtons("thrAft").Value
+            CheckTimeButton.Add (3)
+        Case ActiveSheet.OptionButtons("oneMonth").Value
+            For i = 0 To 1 * monthMult
+                CheckTimeButton.Add (i)
+            Next i
+        Case ActiveSheet.OptionButtons("twoMonths").Value
+            For i = 0 To 2 * monthMult
+                CheckTimeButton.Add (i)
+            Next i
+    End Select
+End Function
+
+Public Function GetPrintColumns() As Integer
+    Gets = printColumns
+End Function
+
+
