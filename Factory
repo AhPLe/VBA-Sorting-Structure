@@ -1,0 +1,10 @@
+'Factory Module for OOP-like VBA code
+Option Explicit
+
+'idea from https://stackoverflow.com/questions/15224113/pass-arguments-to-constructor-in-vba
+
+Public Function CreateTubeBook(inputWkBkNm As String, inputWkShNm As String, inputStartRowI As Integer) As TubeBook
+    Set CreateTubeBook = New TubeBook
+    CreateTubeBook.InitializeTubeBook initialWkBkNm:=inputWkBkNm, initialWkShNm:=inputWkShNm, initialStartRowI:=inputStartRowI
+End Function
+
