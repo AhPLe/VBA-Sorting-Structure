@@ -80,18 +80,21 @@ Sub Finished_Sample_Check()
                 Set cellPrintPlacement = WorksheetPrintout_Print(testing_WkSht, cellPrintPlacement, oneColl(i))
             End If
         Next i
+
+        Dim completeRange As Range
+        Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1).Address, cellPrintPlacement.Cells(0, printColumns).Address)
+        'the returned range is one past where the final print is, so the selection needs to take one step back
+        completeRange.Select
+    
+        testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
+
     Else
         MsgBox (defBook.Get_TestBook().GetWorkbookName() + " is not open, unable to print results." + Chr(10) + Chr(13) + _
             "Please rename workbook to: " + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorkbookName() + Chr(10) + Chr(13) + _
             "with worksheet:" + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorksheetName())
     End If
     
-    Dim completeRange As Range
-    Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1).Address, cellPrintPlacement.Cells(0, printColumns).Address)
-    'the returned range is one past where the final print is, so the selection needs to take one step back
-    completeRange.Select
-    
-    testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
+
     
     Set oneColl = Nothing
     Set timeColl = Nothing
