@@ -54,6 +54,15 @@ Sub Check_Excel_Document_Formulas()
         'calling this from each header loop, it will make formatting more straightforward
 
         Set cellPrintPlacement = oneErrPrintout.errorPrint(testing_WkSht, cellPrintPlacement)
+        
+        Dim completeRange As Range
+        Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1), cellPrintPlacement.Cells(0, oneErrPrintout.GetPrintColumns))
+        'the returned range is one past where the final print is, so the selection needs to take one step back
+        completeRange.Select
+    
+        testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
+    
+        
     Else
         MsgBox (defBook.Get_TestBook().GetWorkbookName() + " is not open, Unable to Print." + Chr(10) + Chr(13) + _
             "Please rename this file: " + Chr(10) + Chr(13) + defBook.Get_TestBook().GetWorkbookName() + _
@@ -62,12 +71,6 @@ Sub Check_Excel_Document_Formulas()
         'Since this is a default spreadsheet name, I didn't put in that error
     End If
     
-    Dim completeRange As Range
-    Set completeRange = testing_WkSht.Range(startRange.Cells(1, 1), cellPrintPlacement.Cells(0, oneErrPrintout.GetPrintColumns))
-    'the returned range is one past where the final print is, so the selection needs to take one step back
-    completeRange.Select
-    
-    testing_WkSht.Range(clearColPrintPlacement).Value = completeRange.Address
     
     'main function functionality only'
     'test for four or more non-green cells'
